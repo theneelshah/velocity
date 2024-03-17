@@ -58,5 +58,4 @@ const init = async () => {
   });
 };
 
-// init();
-console.log(process.env.ABC);
+init();
