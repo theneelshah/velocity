@@ -3,12 +3,15 @@ const path = require("path");
 const fs = require("fs");
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const mime = require("mime-types");
+const dotenv = require("dotenv");
+
+dotenv.config();
 
 const s3Client = new S3Client({
-  region: "",
+  region: process.env.region,
   credentials: {
-    accessKeyId: "",
-    secretAccessKey: "",
+    accessKeyId: process.env.AWS_ACCESS_KEY,
+    secretAccessKey: process.env.AWS_SECRET_KEY,
   },
 });
 
@@ -55,4 +58,5 @@ const init = async () => {
   });
 };
 
-init();
+// init();
+console.log(process.env.ABC);
