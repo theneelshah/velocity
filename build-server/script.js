@@ -8,7 +8,7 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 const s3Client = new S3Client({
-  region: process.env.region,
+  region: process.env.AWS_REGION,
   credentials: {
     accessKeyId: process.env.AWS_ACCESS_KEY,
     secretAccessKey: process.env.AWS_SECRET_KEY,
@@ -37,14 +37,16 @@ const init = async () => {
     const distDirPath = path.join(__dirname, "output", "dist");
     const distDirContents = fs.readdirSync(distDirPath, { recursive: true });
 
-    for (const filePath of distDirContents) {
+    for (const file of distDirContents) {
+      const filePath = path.join(distDirPath, file);
+
       if (fs.lstatSync(filePath).isDirectory()) continue;
 
       console.log("Uploading: ", filePath);
 
-      const cmd = PutObjectCommand({
+      const cmd = new PutObjectCommand({
         Bucket: "velocity-theneelshah",
-        Key: `__outputs/${PROJECT_ID}/${filePath}`,
+        Key: `__outputs/${PROJECT_ID}/${file}`,
         Body: fs.createReadStream(filePath),
         ContentType: mime.lookup(filePath),
       });
