@@ -1,13 +1,37 @@
 const express = require("express");
 const { generateSlug } = require("random-word-slugs");
 const { ECSClient, RunTaskCommand } = require("@aws-sdk/client-ecs");
+const { Server } = require("socket.io");
+const Redis = require("ioredis");
 const dotenv = require("dotenv");
 
 dotenv.config();
 
 const app = express();
-
+const subscriber = new Redis(
+  `rediss://default:${process.env.REDIS_PWD}@redis-2bb89c66-velocity-redis.a.aivencloud.com:23782`
+);
+const io = new Server({ cors: "*" });
 const PORT = 9000;
+
+io.on("connection", (socket) => {
+  socket.on("subscribe", (channel) => {
+    socket.join(channel);
+    socket.emit("message", `Joined ${channel}`);
+  });
+});
+
+io.listen(9001, () => {
+  console.log("Socket server running on 9001");
+});
+
+const initRedisSubscribe = async () => {
+  console.log("Subscribed to logs...");
+  subscriber.psubscribe("logs*");
+  subscriber.on("message", (pattern, channel, message) => [
+    io.to(channel).emit("message", message),
+  ]);
+};
 
 const ecsClient = new ECSClient({
   region: process.env.AWS_REGION,
@@ -66,4 +90,5 @@ app.post("/project", async (req, res) => {
   });
 });
 
+initRedisSubscribe();
 app.listen(PORT, () => console.log(`API Server running on: ${PORT}`));
